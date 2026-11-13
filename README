@@ -1,0 +1,78 @@
+﻿本地源码包
+==========
+
+这是一个可直接在本地维护和构建的 UPX 源码包。源码、构建脚本、文档和测试工具均按目录保留，构建过程不依赖在线仓库地址。
+
+项目用途
+--------
+
+UPX 是一个面向多种可执行文件格式的高性能可执行文件压缩器。压缩后的程序保持自包含，通常可以显著减小文件体积。
+
+源码布局
+--------
+
+* `src/`：主程序和各目标格式处理器。
+* `src/stub/`：解压 stub 的源码和已生成头文件。
+* `vendor/`：构建所需的本地第三方源码目录。
+* `doc/`：命令行手册和格式说明。
+* `misc/`：测试、分析和辅助脚本。
+* `COPYING`、`LICENSE`：许可证和使用条款。
+
+本地构建
+--------
+
+要求：C++17 编译器、CMake 3.13 或更高版本，以及 GNU Make（Windows 可使用 MinGW、MSYS2 或 Visual Studio 的 CMake 工具链）。
+
+在源码根目录执行：
+
+```text
+cmake -S . -B build/release -DCMAKE_BUILD_TYPE=Release
+cmake --build build/release --config Release --parallel
+```
+
+生成的程序位于 `build/release/upx`（Windows 下为 `build/release/Release/upx.exe` 或对应配置目录）。也可以使用顶层 Makefile：
+
+```text
+make release
+```
+
+构建前请确认 `vendor/` 下已经放置本地依赖源码。目录为空时，CMake 会在配置阶段报告缺失的本地依赖；请从内部源码包、离线缓存或其他本地目录补齐对应内容，不需要执行在线克隆命令。
+
+基本用法
+--------
+
+```text
+upx program.exe
+upx --best program.exe
+upx -d program.exe
+upx --help
+```
+
+完整命令行说明见 `doc/upx-doc.txt` 和 `doc/upx.1`。
+
+本地测试
+--------
+
+先完成构建，再把测试数据目录通过环境变量传给测试脚本：
+
+```text
+set upx_exe=build\release\upx.exe
+set upx_testsuite_SRCDIR=D:\path\to\local-testsuite
+make -C src run-testsuite
+```
+
+Linux、macOS 和其他类 Unix 系统使用相同变量名和对应的本地路径。测试套件必须包含 `files/packed/` 目录。
+
+安全与许可证
+------------
+
+压缩、解压、测试或列出文件都会继承目标文件本身的安全上下文，请只处理可信文件。
+
+本项目按 GNU General Public License v2 或更高版本发布；二进制使用条款和例外约定见 `LICENSE`，完整版权文本见 `COPYING`。
+
+本地维护约定
+------------
+
+* 不在构建脚本中拉取远程依赖。
+* 修改 stub 源码后，在 `src/stub/` 中使用本地工具重新生成头文件。
+* 版本信息以 `src/version.h` 和 `CMakeLists.txt` 中的固定版本号为准，不读取本地版本控制元数据。
